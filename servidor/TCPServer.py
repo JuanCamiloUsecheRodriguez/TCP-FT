@@ -11,33 +11,33 @@ hasher = hashlib.md5()
 
 class transfer :
 
-    mysocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mysocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    socketServidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socketServidor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def __init__(self):
-        num_clients = int(sys.argv[1])
+        numCli = int(sys.argv[1])
         file_name = sys.argv[2]
-        self.mysocket.bind((host, port))
+        self.socketServidor.bind((host, port))
         print(' Server is ready ..')
-        self.mysocket.listen(5)
+        self.socketServidor.listen(5)
         threads = []
-        id_cliente =1
-        while num_clients >0:
-            conn, addr = self.mysocket.accept()
+        idCli =1
+        while numCli >0:
+            conn, addr = self.socketServidor.accept()
             size = os.path.getsize(file_name)
             print(' file size : {}'.format(str(size)))
-            send_thread = threading.Thread(target = self.send_file, args=(file_name, size, conn, addr, id_cliente ))
+            send_thread = threading.Thread(target = self.send_file, args=(file_name, size, conn, addr, idCli ))
             threads.append(send_thread)
-            num_clients = num_clients - 1
-            id_cliente=id_cliente+1
+            numCli = numCli - 1
+            idCli=idCli+1
         for thread in threads:
             thread.start()
 
-    def send_file(self, file_name, size, conn, addr, id_cliente):
+    def send_file(self, file_name, size, conn, addr, idCli):
         size = os.path.getsize(file_name)
         conn.send(file_name.encode('utf-8'))
         conn.send(str(size).encode('utf-8'))
-        conn.send(str(id_cliente).encode('utf-8'))
+        conn.send(str(idCli).encode('utf-8'))
         i = 0
         bytesSent = 0
         print(' file size : {}'.format(str(size)))
@@ -61,7 +61,6 @@ class transfer :
             hasher.update(buf)
             hash_servidor = hasher.hexdigest()
             conn.send(str(hash_servidor).encode('utf-8'))
-            print(' File sent successfully.')
 
 
 

@@ -17,12 +17,12 @@ l.addHandler(sh)
 l.setLevel(DEBUG)
 
 
-host, port = '157.253.205.7', 9000
+host, port = 'localhost', 9000
 hasher = hashlib.md5()
 SIZE=32000
 
 showtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-l.info('%s;%s','DATE',showtime)
+l.info('%s#%s','FECHA',showtime)
 
 
 class recv_data :
@@ -56,9 +56,9 @@ class recv_data :
 
 
 
-        l.info('%s;%s', 'FILE_NAME', filename.decode('utf-8'))
-        l.info('%s;%s', 'FILE_SIZE', filesize.decode('utf-8'))
-        l.info('%s;%s', 'CLIENT', idCliente.decode('utf-8'))
+        l.info('%s#%s', 'NOMBRE_ARCHIVO', filename.decode('utf-8'))
+        l.info('%s#%s', 'TAMANO_ARCHIVO', filesize.decode('utf-8'))
+        l.info('%s#%s', 'ID_CLIENTE', idCliente.decode('utf-8'))
 
         bytesSent = self.mysocket.recv(SIZE)
         numPack = self.mysocket.recv(SIZE)
@@ -66,21 +66,21 @@ class recv_data :
         hash_servidor = self.mysocket.recv(SIZE)
         hash_servidor = hash_servidor.decode('utf-8')
         if hash_servidor == hash_cliente:
-            l.info('FILE_DELIVERY;SUCCESS')
+            l.info('ENVIO_ARCHIVO#EXITOSO')
 
         else:
-            l.info('FILE_DELIVERY;FAILURE')
+            l.info('ENVIO_ARCHIVO#FALLO')
 
-        l.info('%s;%s', 'BYTES_SENT', bytesSent.decode('utf-8'))
-        l.info('%s;%s', 'BYTES_RECEIVED', str(bytesReceived-3))
+        l.info('%s#%s', 'BYTES_ENVIADOS', bytesSent.decode('utf-8'))
+        l.info('%s#%s', 'BYTES_RECIBIDOS', str(bytesReceived-3))
 
         elapsed_time = time.time() - start_time
         showtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         print('TIME ELAPSED: ', elapsed_time)
-        l.info('%s;%s', 'PACKETS SENT', numPack.decode('utf-8'))
-        l.info('%s;%s', 'PACKETS RECEIVED', i-1)
+        l.info('%s#%s', 'PAQUETES_ENVIADOS', numPack.decode('utf-8'))
+        l.info('%s#%s', 'PAQUETES_RECIBIDOS', i-1)
 
-        l.info('%s;%s', 'ELAPSED_TIME', elapsed_time)
+        l.info('%s#%s', 'TIEMPO_TOTAL', elapsed_time)
         l.info('------------------------------')
         logging.shutdown()
         os.rename('./logs/TCP.log', './logs/TCP{}.log'.format(idCliente.decode('utf-8')))
