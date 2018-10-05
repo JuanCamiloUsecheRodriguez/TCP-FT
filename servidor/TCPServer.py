@@ -1,66 +1,82 @@
-import socket, threading, os, hashlib, sys
-from time import sleep
 
+import socket, sys, threading, hashlib,time, logging,os
+from time import gmtime, strftime
+from time import sleep
+from sys import stderr
+from logging import getLogger, StreamHandler, Formatter, DEBUG
 
 host, port = '', 9000
-SIZE = 32000
+TAMANO = 2048
 hasher = hashlib.md5()
-
-
-
+tamano = 0
 
 class transfer :
 
-    socketServidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socketServidor.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def __init__(self):
         numCli = int(sys.argv[1])
         file_name = sys.argv[2]
-        self.socketServidor.bind((host, port))
-        print(' Server is ready ..')
-        self.socketServidor.listen(5)
+        self.serversocket.bind((host, port))
+        print(' Server ready for connections')
+        self.serversocket.listen(5)
         threads = []
-        idCli =1
+        id_cliente =1
         while numCli >0:
-            conn, addr = self.socketServidor.accept()
-            size = os.path.getsize(file_name)
-            print(' file size : {}'.format(str(size)))
-            send_thread = threading.Thread(target = self.send_file, args=(file_name, size, conn, addr, idCli ))
+            tamano = os.path.getsize(file_name)
+            conn, addr = self.serversocket.accept()
+            print(' file TAMANO : {}'.format(str(TAMANO)))
+            send_thread = threading.Thread(target = self.send_file, args=(file_name, tamano, conn, id_cliente ))
             threads.append(send_thread)
             numCli = numCli - 1
-            idCli=idCli+1
+            id_cliente=id_cliente+1
         for thread in threads:
             thread.start()
 
-    def send_file(self, file_name, size, conn, addr, idCli):
-        size = os.path.getsize(file_name)
-        conn.send(file_name.encode('utf-8'))
-        conn.send(str(size).encode('utf-8'))
-        conn.send(str(idCli).encode('utf-8'))
+    def send_file(self, file_name, tamano, conn, id_cliente):
+
+        l = getLogger()
+        os.makedirs(os.path.dirname('./logs/TCP{}.log'.format(id_cliente)), exist_ok=True)
+        logging.basicConfig(format='%(message)s', filename='./logs/TCP{}.log'.format(id_cliente), level=logging.DEBUG)
+        sh = StreamHandler(stderr)
+        sh.setLevel(DEBUG)
+        f = Formatter(' %(message)s')
+        sh.setFormatter(f)
+        l.addHandler(sh)
+        l.setLevel(DEBUG)
+        showtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        l.info('%s#%s', 'FECHA', showtime)
+        l.info('%s#%s', 'NOMBRE_ARCHIVO', file_name)
+        l.info('%s#%s', 'TAMANO_ARCHIVO', tamano)
+        l.info('%s#%s', 'ID_CLIENTE', id_cliente)
         i = 0
         bytesSent = 0
-        print(' file size : {}'.format(str(size)))
         with open(file_name, 'rb') as file:
-            data = file.read(SIZE)
+            tamano = os.path.getsize(file_name)
+            data = file.read(TAMANO)
+            start_time = time.time()
             conn.send(data)
             while data != bytes(''.encode()):
-                #print(data)
-                data = file.read(SIZE)
+                data = file.read(TAMANO)
                 sent = conn.send(data)
                 i = i+1
+                print(len(data))
                 bytesSent = bytesSent+sent
-                if sent != SIZE:
+                if sent < TAMANO:
                     sent = conn.send(b'Fin')
                     print('Fin')
                     break
-            conn.send(str(bytesSent).encode('utf-8'))
-            sleep(0.5)
-            conn.send(str(i).encode('utf-8'))
-            buf = file.read()
-            hasher.update(buf)
-            hash_servidor = hasher.hexdigest()
-            conn.send(str(hash_servidor).encode('utf-8'))
+
+            elapsed_time = time.time() - start_time
+            print(' File sent successfully.')
+            l.info('FILE_DELIVERY;SUCCESS')
+            l.info('%s#%s', 'BYTES_ENVIADOS', bytesSent)
+            l.info('%s#%s', 'BYTES_RECIBIDOS', bytesSent)
+            l.info('%s#%s', 'PAQUETES_ENVIADOS', i)
+            l.info('%s#%s', 'PAQUETES_RECIBIDOS', i)
+            l.info('%s#%s', 'TIEMPO_TOTAL', elapsed_time)
+            l.info('-----------------------------------')
 
 
 
