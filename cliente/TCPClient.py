@@ -4,7 +4,7 @@ import socket, sys, hashlib
 host, port = '157.253.205.19', 9000
 #host, port = 'localhost', 9000
 hasher = hashlib.md5()
-SIZE=2048
+SIZE=60000
 
 class recv_data :
 

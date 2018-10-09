@@ -6,7 +6,7 @@ from logging import getLogger, StreamHandler, Formatter, DEBUG
 #ESTAS SIMPLEMENTE SON VARIABLES
 host, port = '', 9000
 hasher = hashlib.md5()
-TAMANO = 2048
+TAMANO = 60000
 tamano = 0
 
 class transfer :
